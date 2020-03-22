@@ -1,27 +1,46 @@
 import requests
 import json
 import pandas as pd
+from typing import Union
 
 
 class Toloka:
     def __init__(self, token):
-        self.toloka_url = "https://toloka.yandex.ru"
-        self.toloka_token = token
+        '''
+        Это документация в конструкторе.
 
-    def get_pool_answers(self, pool_id):
+        `token` - OAuth токен Толоки, который можно получить в личном кабинете.
+        '''
+
+        self._toloka_url = "https://toloka.yandex.ru"
+        self._toloka_token = token
+
+    def get_pool_answers(self, pool_id: Union[str, int]) -> pd.DataFrame:
+        '''
+        Получение всех ответов в заданном пуле.
+
+        `pool_id` - идентификатор пула
+
+        Возвращает `pandas.DataFrame` со столбцами:
+
+        * `toloka_*` - аттрибуты в привязке к внутренней логике Толоки
+        * `input_*` - поля входных данных
+        * `output_*` - поля выходных данных, результаты разметки
+        '''
+
         task_answers = requests.get(
-            f"{self.toloka_url}/api/v1/assignments",
+            f"{self._toloka_url}/api/v1/assignments",
             params={"pool_id": pool_id, "limit": "10000",},
             headers={
-                "Authorization": f"OAuth {self.toloka_token}",
+                "Authorization": f"OAuth {self._toloka_token}",
                 "Content-Type": "application/JSON",
             },
         )
 
-        return build_answers_dataframe(task_answers.json())
+        return _build_answers_dataframe(task_answers.json())
 
 
-def build_answers_dataframe(data):
+def _build_answers_dataframe(data):
     records = []
     # выдачи наборов заданий
     for item in data["items"]:
